@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCVKLWOThb0pDWoLnjmu2eIlMPsr33-87A</string>
+	<key>GCM_SENDER_ID</key>
+	<string>50479627374</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.newApp.RunnerTests</string>
+	<key>PROJECT_ID</key>
+	<string>flutter-chat-app-6af88</string>
+	<key>STORAGE_BUCKET</key>
+	<string>flutter-chat-app-6af88.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:50479627374:ios:9d68f6f32da311d27cba7f</string>
+</dict>
+</plist>

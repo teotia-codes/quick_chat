@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:quick_chat/widgets/user_image_picker.dart';
 
 final _firebase = FirebaseAuth.instance;
 
@@ -16,27 +21,46 @@ class _AuthScreenState extends State<AuthScreen> {
   var _enteredEmail = '';
   var _enteredPass = '';
   var _isLogin = true;
+  File? _selectedImage;
+  var _enteredUdername = '';
+  var _isAuthenticating = false;
   void _submit() async {
     final isValid = _formKey.currentState!.validate();
-    if (!isValid) {
+    if (!isValid||!_isLogin && _selectedImage == null) {
       return;
     }
-    _formKey.currentState!.save();
 
-    if (_isLogin) {
-    } else {
-      try {
+    _formKey.currentState!.save();
+    try {
+      setState(() {
+        _isAuthenticating = true;
+      });
+      if (_isLogin) {
+        _firebase.signInWithEmailAndPassword(
+            email: _enteredEmail, password: _enteredPass);
+      } else {
         final userCredentials = await _firebase.createUserWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPass);
-      } on FirebaseAuthException catch (error) {
-        if (error.code == 'email-already-in-use') {}
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.message ?? 'Authentication failed.'),
-          ),
-        );
+         final storageRef =   FirebaseStorage.instance.ref().child('use_images').child('${userCredentials.user!.uid}.jpg');
+    await  storageRef.putFile(_selectedImage!);
+  final imageUrl = await  storageRef.getDownloadURL();
+  await FirebaseFirestore.instance.collection('users').doc(userCredentials.user!.uid).set({
+    'username' : _enteredUdername,
+    'email' : _enteredEmail,
+    'image_url' : imageUrl,
+  });
       }
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'email-already-in-use') {}
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message ?? 'Authentication failed.'),
+        ),
+      );
+      setState(() {
+        _isAuthenticating =false;
+      });
     }
   }
 
@@ -52,6 +76,10 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  if(!_isLogin)
+                  UserImagePicker(onPickImage: (pickedImage) {
+                    _selectedImage = pickedImage;
+                  },),
                   Card(
                     color: Colors.transparent,
                     margin: const EdgeInsets.all(20),
@@ -89,9 +117,35 @@ class _AuthScreenState extends State<AuthScreen> {
                                     _enteredEmail = value!;
                                   },
                                 ),
-                                const SizedBox(
-                                  height: 24,
+                               const SizedBox(height: 8,),
+                                if(!_isLogin)
+                                 TextFormField(
+                                  style: TextStyle(color: Colors.white),
+                                  decoration: const InputDecoration(
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.never,
+                                      constraints:
+                                          BoxConstraints(maxHeight: 30),
+                                      labelText: 'Username',
+                                      labelStyle: TextStyle(
+                                          fontSize: 14, color: Colors.white)),
+                                          enableSuggestions: false,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autocorrect: false,
+                                  textCapitalization: TextCapitalization.none,
+                                  autofocus: false,
+                                  validator: (value) {
+                                    if (value == null ||
+                                        value.trim().length < 4 || value.isEmpty) {
+                                      return 'Please enter a valid username ';
+                                    }
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _enteredUdername = value!;
+                                  },
                                 ),
+                                const SizedBox(height: 8,),
                                 TextFormField(
                                   style: TextStyle(color: Colors.white),
                                   decoration: const InputDecoration(
@@ -120,6 +174,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                 const SizedBox(
                                   height: 12,
                                 ),
+                                if(_isAuthenticating)
+                                CircularProgressIndicator(),
+                                if(!_isAuthenticating)
                                 ElevatedButton(
                                   onPressed: _submit,
                                   child: Text(
@@ -129,6 +186,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.transparent),
                                 ),
+                                if(!_isAuthenticating)
                                 TextButton(
                                     onPressed: () {
                                       setState(() {
